@@ -12,7 +12,7 @@ end:
 computeCompanionMatrix := proc(S, p)
 # INPUT: S - a matrix
 #        p - a prime number
-# OUTPUT: Either fail or the characteristic polynomial of S and a similarity transformation W bringing
+# OUTPUT: Either false or the characteristic polynomial of S and a similarity transformation W bringing
 # 	  S into companion form
 	local C, i, t, v, w, W;
 	
@@ -25,6 +25,36 @@ computeCompanionMatrix := proc(S, p)
 	W := Matrix([seq(convert(w[i], 'list'), i=1..t)]);
 	if LinearAlgebra[Modular][Determinant](p, W) = 0 then
 		return false;
+	fi;
+	C := LinearAlgebra[Modular][Multiply](p, W, LinearAlgebra[Modular][Multiply](p, S, LinearAlgebra[Modular][Inverse](p, W)));
+	[W, LinearAlgebra[Row](C, t), C];
+
+end:
+
+computeBlockCompanionMatrix := proc(S, p)
+# INPUT: S - a matrix
+#        p - a prime number
+# OUTPUT: The characteristic polynomial of S and a similarity transformation W bringing S into block-companion form
+	local C, i, t, v, w, W, R;
+	
+	t := LinearAlgebra[Dimension](S)[1];
+	v := LinearAlgebra[Modular][Create](p, 1, t, random, integer);	
+	print(v);
+	w[1] := v;
+	W := Matrix(convert(v, 'list'));
+	print(W);
+	for i from 2 to t do
+		w[i] := LinearAlgebra[Modular][Multiply](p, w[i-1], S);
+		
+		R := LinearAlgebra[Modular][RowEchelonTransform](p, W, true, true, true, false);
+		print(R);
+		UnitVector(i, d)
+	od;
+	W := Matrix([seq(convert(w[i], 'list'), i=1..t)]);
+	if LinearAlgebra[Modular][Determinant](p, W) = 0 then
+		R := LinearAlgebra[Modular][RowEchelonTransform](p, W, true, true, true, false);
+		print(R);
+		return(R)
 	fi;
 	C := LinearAlgebra[Modular][Multiply](p, W, LinearAlgebra[Modular][Multiply](p, S, LinearAlgebra[Modular][Inverse](p, W)));
 	[W, LinearAlgebra[Row](C, t), C];
