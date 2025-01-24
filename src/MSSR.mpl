@@ -53,7 +53,7 @@ FrobeniusNormalForm := proc(A, p)
 end proc;
 
 
-computePolycyclicForm := proc(S, p)
+computeShiftedHessenbergForm := proc(S, p)
 # INPUT: S - a matrix
 #        p - a prime number
 # OUTPUT: The characteristic polynomial of S and a similarity transformation W bringing S into block-triagonal companion form
@@ -65,39 +65,39 @@ computePolycyclicForm := proc(S, p)
     WW := LinearAlgebra[Modular][Copy](p, v);
     W := LinearAlgebra[Modular][Copy](p, v);
 	#v := Matrix(convert(v, 'list'));
-	userinfo(5, computePolycyclicForm, "Starting with row vector", convert(v, 'list'));
+	userinfo(5, computeShiftedHessenbergForm, "Starting with row vector", convert(v, 'list'));
 
 	r := 1;
 	#j := 1;
     d[0]:= 0;
     h := 1;
     #dlist := [];
-	userinfo(5, computePolycyclicForm, "Starting new block: ", h);
+	userinfo(5, computeShiftedHessenbergForm, "Starting new block: ", h);
 	for i from 2 to t do
 		#print(i,j,WW);
 		vv := LinearAlgebra[Modular][Multiply](p, v, S);
-        userinfo(5, computePolycyclicForm, "Iterated vector is", convert(vv, 'list'));
+        userinfo(5, computeShiftedHessenbergForm, "Iterated vector is", convert(vv, 'list'));
         
         WW:= ArrayTools[Concatenate](1, W, vv);
         rr := LinearAlgebra[Modular][Rank](p, WW);
-        userinfo(5, computePolycyclicForm, "New rank is", rr);
+        userinfo(5, computeShiftedHessenbergForm, "New rank is", rr);
         
 		if rr > r then
-			userinfo(5, computePolycyclicForm, "Increasing size", rr);
+			userinfo(5, computeShiftedHessenbergForm, "Increasing size", rr);
             v := vv;
             W := LinearAlgebra[Modular][Copy](p, WW);
 			r := rr;
             #d := d+1;
 		else
-            userinfo(5, computePolycyclicForm, "Finish block of dimension", i-1-d[h-1]);
+            userinfo(5, computeShiftedHessenbergForm, "Finish block of dimension", i-1-d[h-1]);
             
             R := LinearAlgebra[Modular][RowEchelonTransform](p, LinearAlgebra[Modular][Copy](p, W), true, true, true, false);
-			userinfo(5, computePolycyclicForm, "Row-echelon indices: ", R[2],nops(R[2]));
+			userinfo(5, computeShiftedHessenbergForm, "Row-echelon indices: ", R[2],nops(R[2]));
             k := 1; while R[2][k]=k do k := k+1 od; 
             #k := 7;
-            userinfo(5, computePolycyclicForm, "Pick index: ", k); 			
+            userinfo(5, computeShiftedHessenbergForm, "Pick index: ", k); 			
 			v := LinearAlgebra[Transpose](LinearAlgebra[UnitVector](k, t));
-			userinfo(5, computePolycyclicForm, "Vector is", convert(v, 'list'));            
+			userinfo(5, computeShiftedHessenbergForm, "Vector is", convert(v, 'list'));            
             W := ArrayTools[Concatenate](1, W, v);
             
             #dlist := [op(dlist), d];
@@ -105,8 +105,8 @@ computePolycyclicForm := proc(S, p)
             h := h+1;
 			r := rr + 1;
             #d := 1;
-            userinfo(5, computePolycyclicForm, "Starting new block: ", h);
-            userinfo(5, computePolycyclicForm, "New rank is", LinearAlgebra[Modular][Rank](p, W));
+            userinfo(5, computeShiftedHessenbergForm, "Starting new block: ", h);
+            userinfo(5, computeShiftedHessenbergForm, "New rank is", LinearAlgebra[Modular][Rank](p, W));
   
 
 		fi;
@@ -114,7 +114,7 @@ computePolycyclicForm := proc(S, p)
     
     d[h] := t;
     print(d[h], d[h-1]);
-    userinfo(5, computePolycyclicForm, "Finish block of dimension", t-d[h-1]);
+    userinfo(5, computeShiftedHessenbergForm, "Finish block of dimension", t-d[h-1]);
     #dlist := [op(dlist), d];    
 	C := LinearAlgebra[Modular][Multiply](p, W, LinearAlgebra[Modular][Multiply](p, S, LinearAlgebra[Modular][Inverse](p, W)));
     [d, S, C]
