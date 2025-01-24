@@ -31,63 +31,93 @@ computeCompanionMatrix := proc(S, p)
 
 end:
 
-computeBlockCompanionMatrix := proc(S, p)
+FrobeniusNormalForm := proc(A, p)
+    local F, Q;
+
+    # Check if inputs are valid
+    if not type(A, Matrix) then
+        error "The input A must be a valid matrix.";
+    end if;
+    if not type(p, prime) then
+        error "The input p must be a prime number.";
+    end if;
+
+    # Reduce the matrix A modulo p
+    A := LinearAlgebra[Mod](A, p);
+
+    # Compute the Frobenius normal form and the similarity transformation
+    F, Q := LinearAlgebra[FrobeniusForm](A, 'transform' = true);
+
+    # Return both the Frobenius form and the transformation matrix
+    return F, Q;
+end proc;
+
+
+computePolycyclicForm := proc(S, p)
 # INPUT: S - a matrix
 #        p - a prime number
-# OUTPUT: The characteristic polynomial of S and a similarity transformation W bringing S into block-companion form
-	local C, i, j, k, t, v, w, W, WW, R, r;
+# OUTPUT: The characteristic polynomial of S and a similarity transformation W bringing S into block-triagonal companion form
+	local C, i, j, k, t, v, vv, w, W, WW, R, r, rr, d, dlist, h;
 	
 	t := LinearAlgebra[Dimension](S)[1];
 	v := LinearAlgebra[Modular][Create](p, 1, t, random, integer);	
-	userinfo(5, computeBlockCompanionMatrix, "Vector is", convert(v, 'list'));
-	w[1] := LinearAlgebra[Modular][Create](p, 1, t, random, integer);
-    w[1] := Matrix(1, 8, {(1, 1) = 0, (1, 2) = 1, (1, 3) = 1, (1, 4) = 0, (1, 5) = 0, (1, 6) = 1, (1, 7) = 1, (1, 8) = 0});
-	W[1] := Matrix(convert(w[1], 'list'));
-	#userinfo(5, computeBlockCompanionMatrix, W[1]);
+    v := Matrix(1, 8, {(1, 1) = 0, (1, 2) = 1, (1, 3) = 1, (1, 4) = 0, (1, 5) = 0, (1, 6) = 1, (1, 7) = 1, (1, 8) = 0});
+    WW := LinearAlgebra[Modular][Copy](p, v);
+    W := LinearAlgebra[Modular][Copy](p, v);
+	#v := Matrix(convert(v, 'list'));
+	userinfo(5, computePolycyclicForm, "Starting with row vector", convert(v, 'list'));
+
 	r := 1;
-	j := 1;
-	userinfo(5, computeBlockCompanionMatrix, "Starting new block: ",j);
+	#j := 1;
+    d[0]:= 0;
+    h := 1;
+    #dlist := [];
+	userinfo(5, computePolycyclicForm, "Starting new block: ", h);
 	for i from 2 to t do
-		print(i,j,W[j]);
-		w[i] := LinearAlgebra[Modular][Multiply](p, w[i-1], S);
-        userinfo(5, computeBlockCompanionMatrix, "Iterated vector is", convert(w[i], 'list'), "augmented rank is", LinearAlgebra[Modular][Rank](p, ArrayTools[Concatenate](1, W[j], w[i])));
-		if LinearAlgebra[Modular][Rank](p, ArrayTools[Concatenate](1, W[j], w[i])) > r then
-			userinfo(5, computeBlockCompanionMatrix, "Increasing size", r);
-			W[j] := ArrayTools[Concatenate](1, W[j], w[i]);
-			r := r+1
+		#print(i,j,WW);
+		vv := LinearAlgebra[Modular][Multiply](p, v, S);
+        userinfo(5, computePolycyclicForm, "Iterated vector is", convert(vv, 'list'));
+        
+        WW:= ArrayTools[Concatenate](1, W, vv);
+        rr := LinearAlgebra[Modular][Rank](p, WW);
+        userinfo(5, computePolycyclicForm, "New rank is", rr);
+        
+		if rr > r then
+			userinfo(5, computePolycyclicForm, "Increasing size", rr);
+            v := vv;
+            W := LinearAlgebra[Modular][Copy](p, WW);
+			r := rr;
+            #d := d+1;
 		else
-			if j=1 then WW := W[1] else WW := ArrayTools[Concatenate](1, WW, W[j]) fi;
-            userinfo(5, computeBlockCompanionMatrix, "Finish block of dimension", r);
-            R := LinearAlgebra[Modular][RowEchelonTransform](p, LinearAlgebra[Modular][Copy](p, WW), true, true, true, false);
-			userinfo(5, computeBlockCompanionMatrix, "Row-echelon indices: ", R[2]);
+            userinfo(5, computePolycyclicForm, "Finish block of dimension", i-1-d[h-1]);
+            
+            R := LinearAlgebra[Modular][RowEchelonTransform](p, LinearAlgebra[Modular][Copy](p, W), true, true, true, false);
+			userinfo(5, computePolycyclicForm, "Row-echelon indices: ", R[2],nops(R[2]));
             k := 1; while R[2][k]=k do k := k+1 od; 
-            userinfo(5, computeBlockCompanionMatrix, "Pick index: ", k);
-			j := j+1; 
-			
-			w[i] := LinearAlgebra[Transpose](LinearAlgebra[UnitVector](k, t));
-            #userinfo(5, computeBlockCompanionMatrix, w[i]);
-            #LinearAlgebra[Modular][Create](p, 1, t, random, integer);
-			W[j] := Matrix(convert(w[i], 'list'));
-			userinfo(5, computeBlockCompanionMatrix, "Starting new block: # = ",j);
-			userinfo(5, computeBlockCompanionMatrix, "Vector is", convert(w[i], 'list'));
-			r := 1;
+            #k := 7;
+            userinfo(5, computePolycyclicForm, "Pick index: ", k); 			
+			v := LinearAlgebra[Transpose](LinearAlgebra[UnitVector](k, t));
+			userinfo(5, computePolycyclicForm, "Vector is", convert(v, 'list'));            
+            W := ArrayTools[Concatenate](1, W, v);
+            
+            #dlist := [op(dlist), d];
+            d[h] := i-1;
+            h := h+1;
+			r := rr + 1;
+            #d := 1;
+            userinfo(5, computePolycyclicForm, "Starting new block: ", h);
+            userinfo(5, computePolycyclicForm, "New rank is", LinearAlgebra[Modular][Rank](p, W));
+  
+
 		fi;
 	od;
     
-    # Concatenate last block 
-	userinfo(5, computeBlockCompanionMatrix, "WW is", WW);
-    WW := ArrayTools[Concatenate](1, WW, W[j]);
-	userinfo(5, computeBlockCompanionMatrix, WW);
-	#W := Matrix([seq(convert(w[i], 'list'), i=1..t)]);
-	#if LinearAlgebra[Modular][Determinant](p, W) = 0 then
-	#	R := LinearAlgebra[Modular][RowEchelonTransform](p, W, true, true, true, false);
-	#	userinfo(5, computeBlockCompanionMatrix, R);
-	#	return(R)
-	#fi;
-	C := LinearAlgebra[Modular][Multiply](p, WW, LinearAlgebra[Modular][Multiply](p, S, LinearAlgebra[Modular][Inverse](p, WW)));
-	#[W, LinearAlgebra[Row](C, t), C];
-	#[seq(W[i], i=1..j)]
-    C
+    d[h] := t;
+    print(d[h], d[h-1]);
+    userinfo(5, computePolycyclicForm, "Finish block of dimension", t-d[h-1]);
+    #dlist := [op(dlist), d];    
+	C := LinearAlgebra[Modular][Multiply](p, W, LinearAlgebra[Modular][Multiply](p, S, LinearAlgebra[Modular][Inverse](p, W)));
+    [d, S, C]
 
 end:
 
