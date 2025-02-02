@@ -31,7 +31,7 @@ computeCompanionMatrix := proc(S, p)
 
 end:
 
-FrobeniusNormalForm := proc(A, p)
+computeFrobeniusNormalForm := proc(A, p)
     local F, Q;
 
     # Check if inputs are valid
@@ -42,15 +42,12 @@ FrobeniusNormalForm := proc(A, p)
         error "The input p must be a prime number.";
     end if;
 
-    # Reduce the matrix A modulo p
-    A := LinearAlgebra[Mod](A, p);
-
     # Compute the Frobenius normal form and the similarity transformation
-    F, Q := LinearAlgebra[FrobeniusForm](A, 'transform' = true);
+    F := evala(Frobenius(A, 'Q') mod p);
 
     # Return both the Frobenius form and the transformation matrix
-    return F, Q;
-end proc;
+    return [F, Q];
+end proc:
 
 
 computeShiftedHessenbergForm := proc(S, p)
@@ -121,7 +118,7 @@ computeShiftedHessenbergForm := proc(S, p)
 
 end:
 
-reduceShareSize := proc(s)
+reduceShareSize_p := proc(s)
 # INPUT: S - a matrix
 # OUTPUT: P - a public matrix
 #         Q - a private row vector
@@ -138,6 +135,19 @@ reduceShareSize := proc(s)
 		success := computeCompanionMatrix(convertSecret(s, p), p);
 	od;
 	[l, p, ceil(sqrt(1+floor(log(s)/log(p)))), time()-t0, success]
+end:
+
+reduceShareSize_d := proc(s, p)
+# INPUT: S - a matrix
+# OUTPUT: P - a public matrix
+#         Q - a private row vector
+#         info - additional test info
+	local t0, success;
+
+	t0 := time();
+    
+    success := computeFrobeniusNormalForm(convertSecret(s, p), p);
+	[time()-t0, success]
 end:
 
 createShares := proc(s, p)
