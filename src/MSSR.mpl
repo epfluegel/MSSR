@@ -28,8 +28,7 @@ computeCompanionMatrix := proc(S, p)
 	fi;
 	C := LinearAlgebra[Modular][Multiply](p, W, LinearAlgebra[Modular][Multiply](p, S, LinearAlgebra[Modular][Inverse](p, W)));
 	[W, LinearAlgebra[Row](C, t), C];
-
-end:
+end proc:
 
 computeFrobeniusNormalForm := proc(A, p)
     local F, Q;
